@@ -68,7 +68,6 @@ crime_analysis/
 
 ## 📷 Sample Screenshots
 
-> Add screenshots here once the app is running. Use tools like Lightshot or your browser's capture function.
 
 ## 📚 Dataset
 
@@ -85,11 +84,5 @@ crime_analysis/
 
 Feel free to fork and raise pull requests. Feedback and suggestions are welcome!
 
-## 📄 License
 
-This project is licensed under the MIT License. See `LICENSE` for details.
-```
 
----
-
-Let me know if you'd like me to generate a `requirements.txt`, sample screenshots, or help you create a live deployment for showcasing this project.
