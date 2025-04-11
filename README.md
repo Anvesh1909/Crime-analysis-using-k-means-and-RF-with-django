@@ -1,11 +1,5 @@
-Here's a clean and professional `README.md` you can use for your **Crime Analysis using KMeans Clustering & Random Forest** project on GitHub:
 
----
-
-### 📄 `README.md`
-
-```markdown
-# Crime Analysis using KMeans Clustering & Random Forest
+# **Crime Analysis using KMeans Clustering & Random Forest**
 
 A Django-based data analysis web application that explores and predicts crime patterns in India from 2001 to 2012. The project uses unsupervised learning (KMeans) for crime categorization and Random Forest Regression for future crime prediction, with detailed data visualizations built using Matplotlib.
 
