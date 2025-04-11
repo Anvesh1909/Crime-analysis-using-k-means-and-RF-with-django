@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Cluster Prediction - Crime Analysis{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title mb-0">Crime Cluster Prediction</h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{% url 'ClusterPredictionAction' %}">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="state" class="form-label">State</label>
+                                <select class="form-select" id="state" name="t1" required>
+                                    {{ states|safe }}
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="district" class="form-label">District</label>
+                                <select class="form-select" id="district" name="t2" required>
+                                    {{ districts|safe }}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="year" class="form-label">Year</label>
+                                <select class="form-select" id="year" name="t3" required>
+                                    {{ years|safe }}
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="murder" class="form-label">Murder Cases</label>
+                                <input type="number" class="form-control" id="murder" name="t4" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="rape" class="form-label">Rape Cases</label>
+                                <input type="number" class="form-control" id="rape" name="t5" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="theft" class="form-label">Theft Cases</label>
+                                <input type="number" class="form-control" id="theft" name="t6" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="dowry" class="form-label">Dowry Death Cases</label>
+                                <input type="number" class="form-control" id="dowry" name="t7" required>
+                            </div>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Predict Crime Cluster</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {% if prediction_result %}
+            <div class="card shadow-lg">
+                <div class="card-header bg-info text-white">
+                    <h4 class="card-title mb-0">Prediction Results</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert {% if prediction_result.is_high_crime %}alert-danger{% else %}alert-success{% endif %} mb-4">
+                        <h4 class="alert-heading">Area Classification</h4>
+                        <p class="mb-0">{{ prediction_result.message }}</p>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>Crime Statistics</h5>
+                            <canvas id="crimeStatsChart"></canvas>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Comparison with Average</h5>
+                            <canvas id="comparisonChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <h5>Detailed Analysis</h5>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Crime Type</th>
+                                        <th>Current Value</th>
+                                        <th>Average Value</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for crime in prediction_result.crime_details %}
+                                    <tr>
+                                        <td>{{ crime.type }}</td>
+                                        <td>{{ crime.current }}</td>
+                                        <td>{{ crime.average }}</td>
+                                        <td>
+                                            <span class="badge {% if crime.is_above_average %}bg-danger{% else %}bg-success{% endif %}">
+                                                {{ crime.status }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <h5>Recommendations</h5>
+                        <ul class="list-group">
+                            {% for rec in prediction_result.recommendations %}
+                            <li class="list-group-item">{{ rec }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- jQuery (required for AJAX) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Chart.js (for graphs) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+{% if prediction_result %}
+// Crime Statistics Chart
+const crimeStatsCtx = document.getElementById('crimeStatsChart').getContext('2d');
+new Chart(crimeStatsCtx, {
+    type: 'bar',
+    data: {
+        labels: ['Murder', 'Rape', 'Theft', 'Dowry Deaths'],
+        datasets: [{
+            label: 'Number of Cases',
+            data: [
+                {{ prediction_result.crime_details.0.current }},
+                {{ prediction_result.crime_details.1.current }},
+                {{ prediction_result.crime_details.2.current }},
+                {{ prediction_result.crime_details.3.current }}
+            ],
+            backgroundColor: [
+                'rgba(255, 99, 132, 0.5)',
+                'rgba(54, 162, 235, 0.5)',
+                'rgba(255, 206, 86, 0.5)',
+                'rgba(75, 192, 192, 0.5)'
+            ],
+            borderColor: [
+                'rgba(255, 99, 132, 1)',
+                'rgba(54, 162, 235, 1)',
+                'rgba(255, 206, 86, 1)',
+                'rgba(75, 192, 192, 1)'
+            ],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// Comparison Chart
+const comparisonCtx = document.getElementById('comparisonChart').getContext('2d');
+new Chart(comparisonCtx, {
+    type: 'bar',
+    data: {
+        labels: ['Murder', 'Rape', 'Theft', 'Dowry Deaths'],
+        datasets: [{
+            label: 'Current',
+            data: [
+                {{ prediction_result.crime_details.0.current }},
+                {{ prediction_result.crime_details.1.current }},
+                {{ prediction_result.crime_details.2.current }},
+                {{ prediction_result.crime_details.3.current }}
+            ],
+            backgroundColor: 'rgba(54, 162, 235, 0.5)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }, {
+            label: 'Average',
+            data: [
+                {{ prediction_result.crime_details.0.average }},
+                {{ prediction_result.crime_details.1.average }},
+                {{ prediction_result.crime_details.2.average }},
+                {{ prediction_result.crime_details.3.average }}
+            ],
+            backgroundColor: 'rgba(255, 99, 132, 0.5)',
+            borderColor: 'rgba(255, 99, 132, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+{% endif %}
+
+$(document).ready(function() {
+    $('#state').on('change', function() {
+        var selectedState = $(this).val();
+        if (selectedState) {
+            $.ajax({
+                url: "{% url 'get_districts_by_state' %}",
+                type: "GET",
+                data: {
+                    'state': selectedState
+                },
+                success: function(data) {
+                    $('#district').html(data);
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error fetching districts:", error);
+                    $('#district').html('<option value="">Select District</option>');
+                }
+            });
+        } else {
+            $('#district').html('<option value="">Select District</option>');
+        }
+    });
+});
+
+
+</script>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Upload Dataset - Crime Analysis{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title mb-0">Upload Crime Dataset</h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{% url 'UploadDatasetAction' %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="dataset" class="form-label">Select Dataset File</label>
+                            <input type="file" class="form-control" id="dataset" name="t1" accept=".csv" required>
+                            <div class="form-text">Please upload a CSV file containing crime data</div>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Upload Dataset</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

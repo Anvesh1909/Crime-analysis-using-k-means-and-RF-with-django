@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard - Crime Analysis{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title mb-0">Admin Dashboard</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">Upload Dataset</h5>
+                                    <p class="card-text">Upload and manage crime dataset</p>
+                                    <a href="{% url 'UploadDataset' %}" class="btn btn-primary">Go to Upload</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">View Dataset</h5>
+                                    <p class="card-text">View and analyze uploaded data</p>
+                                    <a href="{% url 'ViewDataset' %}" class="btn btn-primary">View Data</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title">MSE Graph</h5>
+                                    <p class="card-text">View model performance metrics</p>
+                                    <a href="{% url 'MSEGraph' %}" class="btn btn-primary">View Graph</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

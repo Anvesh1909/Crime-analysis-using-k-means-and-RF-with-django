@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Future Prediction - Crime Analysis{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title mb-0">Future Crime Prediction</h3>
+                </div>
+                <div class="card-body">
+                    {% if prediction %}
+                    <div class="alert alert-info mb-4">
+                        <h4 class="alert-heading">Prediction Result</h4>
+                        <p class="mb-0">{{ prediction }}</p>
+                    </div>
+                    {% endif %}
+                    <form method="POST" action="{% url 'FuturePredictionAction' %}">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="state" class="form-label">State</label>
+                                <select class="form-select" id="state" name="t1" required>
+                                    {{ states|safe }}
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="district" class="form-label">District</label>
+                                <select class="form-select" id="district" name="t2" required>
+                                    {{ districts|safe }}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="year" class="form-label">Future Year</label>
+                                <select class="form-select" id="year" name="t3" required>
+                                    {{ years|safe }}
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="crime_type" class="form-label">Crime Type</label>
+                                <select class="form-select" id="crime_type" name="t4" required>
+                                    <option value="">Select Crime Type</option>
+                                    <option value="Theft">Theft</option>
+                                    <option value="Murder">Murder</option>
+                                    <option value="Rape">Rape</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Predict Future Crime</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {% if prediction_details %}
+            <div class="card shadow-lg">
+                <div class="card-header bg-info text-white">
+                    <h4 class="card-title mb-0">Detailed Prediction Analysis</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>Historical Trend</h5>
+                            <canvas id="historicalTrendChart"></canvas>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Prediction Confidence</h5>
+                            <canvas id="confidenceChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <h5>Prediction Details</h5>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Metric</th>
+                                        <th>Value</th>
+                                        <th>Interpretation</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Predicted Cases</td>
+                                        <td>{{ prediction_details.predicted_value }}</td>
+                                        <td>{{ prediction_details.prediction_interpretation }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Confidence Level</td>
+                                        <td>{{ prediction_details.confidence_level }}%</td>
+                                        <td>{{ prediction_details.confidence_interpretation }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Trend Direction</td>
+                                        <td>{{ prediction_details.trend_direction }}</td>
+                                        <td>{{ prediction_details.trend_interpretation }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <h5>Factors Affecting Prediction</h5>
+                        <ul class="list-group">
+                            {% for factor in prediction_details.factors %}
+                            <li class="list-group-item">
+                                <strong>{{ factor.name }}</strong>: {{ factor.description }}
+                                <span class="badge {% if factor.impact == 'positive' %}bg-success{% else %}bg-danger{% endif %} float-end">
+                                    {{ factor.impact|title }} Impact
+                                </span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    <div class="mt-4">
+                        <h5>Recommendations</h5>
+                        <ul class="list-group">
+                            {% for rec in prediction_details.recommendations %}
+                            <li class="list-group-item">{{ rec }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+
+<!-- jQuery (required for AJAX) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Chart.js (for graphs) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+{% if prediction_details %}
+// Historical Trend Chart
+const historicalTrendCtx = document.getElementById('historicalTrendChart').getContext('2d');
+new Chart(historicalTrendCtx, {
+    type: 'line',
+    data: {
+        labels: {{ prediction_details.historical_years|safe }},
+        datasets: [{
+            label: 'Historical Cases',
+            data: {{ prediction_details.historical_values|safe }},
+            borderColor: 'rgba(54, 162, 235, 1)',
+            backgroundColor: 'rgba(54, 162, 235, 0.1)',
+            fill: true
+        }, {
+            label: 'Predicted Cases',
+            data: {{ prediction_details.prediction_line|safe }},
+            borderColor: 'rgba(255, 99, 132, 1)',
+            borderDash: [5, 5],
+            fill: false
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// Confidence Chart
+const confidenceCtx = document.getElementById('confidenceChart').getContext('2d');
+new Chart(confidenceCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Confidence', 'Uncertainty'],
+        datasets: [{
+            data: [
+                {{ prediction_details.confidence_level }},
+                {{ prediction_details.uncertainty_level }}
+            ],
+            backgroundColor: [
+                'rgba(75, 192, 192, 0.5)',
+                'rgba(255, 99, 132, 0.5)'
+            ],
+            borderColor: [
+                'rgba(75, 192, 192, 1)',
+                'rgba(255, 99, 132, 1)'
+            ],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+{% endif %}
+
+
+$(document).ready(function() {
+    $('#state').on('change', function() {
+        var selectedState = $(this).val();
+        if (selectedState) {
+            $.ajax({
+                url: "{% url 'get_districts_by_state' %}",
+                type: "GET",
+                data: {
+                    'state': selectedState
+                },
+                success: function(data) {
+                    $('#district').html(data);
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error fetching districts:", error);
+                    $('#district').html('<option value="">Select District</option>');
+                }
+            });
+        } else {
+            $('#district').html('<option value="">Select District</option>');
+        }
+    });
+});
+
+
+</script>
+{% endblock %}
